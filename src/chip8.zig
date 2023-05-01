@@ -76,9 +76,11 @@ fn increment_pc(self: *Self) void {
 pub fn cycle(self: *Self) void {
     self.opcode = @intCast(u16, self.memory[self.program_counter]) << 8 | self.memory[self.program_counter + 1];
 
+    std.debug.print("{x}\n", .{self.opcode});
+
     // X000
     var first = self.opcode >> 12;
-    std.debug.print("first: {d}!\n", .{first});
+    //std.debug.print("first: {d}!\n", .{first});
 
     switch (first) {
         0x0 => {
@@ -176,7 +178,7 @@ pub fn cycle(self: *Self) void {
                 },
 
                 0x6 => {
-                    self.registers[0xF] = self.registers[x] & 1;
+                    self.registers[0xF] = self.registers[x] & 0b00000001;
                     self.registers[x] >>= 1;
                 },
 
@@ -187,7 +189,7 @@ pub fn cycle(self: *Self) void {
                 },
 
                 0xE => {
-                    self.registers[0xF] = if (self.registers[x] & 0x80 != 0) 1 else 0;
+                    self.registers[0xF] = if (self.registers[x] & 0b10000000 != 0) 1 else 0; // 0b10000000 == 0x80
                     self.registers[x] <<= 1;
                 },
                 else => {},
@@ -219,7 +221,7 @@ pub fn cycle(self: *Self) void {
             var x = (self.opcode & 0x0F00) >> 8;
             var kk = self.opcode & 0x00FF;
 
-            self.registers[x] = @truncate(u8, @intCast(u32, cstd.rand()) & kk);
+            self.registers[x] = @truncate(u8, @bitCast(u32, cstd.rand()) & kk);
             self.increment_pc();
         },
 
@@ -287,7 +289,6 @@ pub fn cycle(self: *Self) void {
                     if (v != 0) {
                         self.registers[x] = @truncate(u8, idx);
                         key_pressed = true;
-                        break;
                     }
                 }
 
@@ -309,7 +310,7 @@ pub fn cycle(self: *Self) void {
                 self.memory[self.index + 2] = self.registers[x] % 10;
             } else if (kk == 0x55) {
                 var i: usize = 0;
-                while (i < x) : (i += 1) {
+                while (i <= x) : (i += 1) {
                     self.memory[self.index + i] = self.registers[i];
                 }
             } else if (kk == 0x65) {
@@ -318,8 +319,16 @@ pub fn cycle(self: *Self) void {
                     self.registers[i] = self.memory[self.index + i];
                 }
             }
+
+            self.increment_pc();
         },
 
         else => {},
     }
+
+    if(self.delay_timer > 0)
+        self.delay_timer -= 1;
+
+    if(self.sound_timer > 0)
+        self.sound_timer -= 1;
 }
