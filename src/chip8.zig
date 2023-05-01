@@ -48,23 +48,23 @@ pub fn init(self: *Self) void {
     self.delay_timer = 0;
     self.sound_timer = 0;
 
-    for (self.graphics) |*x| {
+    for (&self.graphics) |*x| {
         x.* = 0;
     }
 
-    for (self.memory) |*x| {
+    for (&self.memory) |*x| {
         x.* = 0;
     }
 
-    for (self.stack) |*x| {
+    for (&self.stack) |*x| {
         x.* = 0;
     }
 
-    for (self.registers) |*x| {
+    for (&self.registers) |*x| {
         x.* = 0;
     }
 
-    for (chip8_fontset) |c, idx| {
+    for (chip8_fontset, 0..) |c, idx| {
         self.memory[idx] = c;
     }
 }
@@ -83,7 +83,7 @@ pub fn cycle(self: *Self) void {
     switch (first) {
         0x0 => {
             if (self.opcode == 0x00E0) {
-                for (self.graphics) |*g| {
+                for (&self.graphics) |*g| {
                     g.* = 0;
                 }
             } else if (self.opcode == 0x00EE) {
@@ -283,7 +283,7 @@ pub fn cycle(self: *Self) void {
             } else if (kk == 0x0A) {
                 var key_pressed = false;
 
-                for (self.keys) |v, idx| {
+                for (self.keys, 0..) |v, idx| {
                     if (v != 0) {
                         self.registers[x] = @truncate(u8, idx);
                         key_pressed = true;
