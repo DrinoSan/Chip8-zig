@@ -80,7 +80,6 @@ pub fn cycle(self: *Self) void {
 
     // X000
     var first = self.opcode >> 12;
-    //std.debug.print("first: {d}!\n", .{first});
 
     switch (first) {
         0x0 => {
@@ -133,8 +132,8 @@ pub fn cycle(self: *Self) void {
         0x6 => {
             var x = (self.opcode & 0x0F00) >> 8; // the bitshift is important to move the bit in pos F to the LSB
             //var kk = (self.opcode & 0x00FF);
-            var kk = @truncate(u8, self.opcode & 0x00FF);
-            self.registers[x] = kk;
+            self.registers[x] = @truncate(u8, self.opcode & 0x00FF);
+            
             self.increment_pc();
         },
 
@@ -252,7 +251,7 @@ pub fn cycle(self: *Self) void {
                         self.graphics[idx] ^= 1;
 
                         if (self.graphics[idx] == 0) {
-                            self.registers[0xF] = 1;
+                            self.registers[0x0F] = 1;
                         }
                     }
                 }
@@ -299,6 +298,7 @@ pub fn cycle(self: *Self) void {
             } else if (kk == 0x18) {
                 self.sound_timer = self.registers[x];
             } else if (kk == 0x1E) {
+                self.registers[0xF] = if(self.index + self.registers[x] > 0xFFF) 1 else 0;
                 self.index += self.registers[x];
             } else if (kk == 0x29) {
                 if (self.registers[x] < 16) {
